@@ -1,0 +1,141 @@
+local CheatGUI = {}
+CheatGUI.__index = CheatGUI
+
+-- Function to create the main GUI window
+function CheatGUI.new(title)
+    local self = setmetatable({}, CheatGUI)
+    
+    -- Create ScreenGui
+    self.ScreenGui = Instance.new("ScreenGui")
+    self.ScreenGui.Name = "CheatGUI"
+    self.ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Create main frame
+    self.MainFrame = Instance.new("Frame")
+    self.MainFrame.Name = "MainFrame"
+    self.MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    self.MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    self.MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    self.MainFrame.Parent = self.ScreenGui
+    
+    -- Create title label
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = "TitleLabel"
+    TitleLabel.Text = title
+    TitleLabel.Size = UDim2.new(1, 0, 0, 50)
+    TitleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.Font = Enum.Font.SourceSans
+    TitleLabel.TextSize = 24
+    TitleLabel.Parent = self.MainFrame
+    
+    return self
+end
+
+-- Function to create a tab
+function CheatGUI:AddTab(tabName)
+    local TabButton = Instance.new("TextButton")
+    TabButton.Name = tabName
+    TabButton.Text = tabName
+    TabButton.Size = UDim2.new(1, 0, 0, 50)
+    TabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabButton.Font = Enum.Font.SourceSans
+    TabButton.TextSize = 20
+    TabButton.Parent = self.MainFrame
+    
+    -- Functionality for the tab
+    TabButton.MouseButton1Click:Connect(function()
+        -- Hide other tabs' content and show this tab's content
+    end)
+end
+
+-- Function to create a button
+function CheatGUI:AddButton(tabName, buttonText, callback)
+    local Button = Instance.new("TextButton")
+    Button.Name = buttonText
+    Button.Text = buttonText
+    Button.Size = UDim2.new(1, 0, 0, 50)
+    Button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.Font = Enum.Font.SourceSans
+    Button.TextSize = 18
+    
+    -- Add to the correct tab
+    Button.Parent = self.MainFrame:FindFirstChild(tabName)
+    
+    Button.MouseButton1Click:Connect(callback)
+end
+
+-- Function to create a toggle
+function CheatGUI:AddToggle(tabName, toggleText, callback)
+    local Toggle = Instance.new("TextButton")
+    Toggle.Name = toggleText
+    Toggle.Text = toggleText .. ": OFF"
+    Toggle.Size = UDim2.new(1, 0, 0, 50)
+    Toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Toggle.Font = Enum.Font.SourceSans
+    Toggle.TextSize = 18
+    Toggle.Parent = self.MainFrame:FindFirstChild(tabName)
+    
+    local state = false
+    
+    Toggle.MouseButton1Click:Connect(function()
+        state = not state
+        Toggle.Text = toggleText .. ": " .. (state and "ON" or "OFF")
+        callback(state)
+    end)
+end
+
+-- Function to create a slider
+function CheatGUI:AddSlider(tabName, sliderText, minValue, maxValue, callback)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Name = sliderText
+    SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    SliderFrame.Parent = self.MainFrame:FindFirstChild(tabName)
+    
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Text = sliderText
+    SliderLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    SliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SliderLabel.Font = Enum.Font.SourceSans
+    SliderLabel.TextSize = 18
+    SliderLabel.Parent = SliderFrame
+    
+    local SliderBar = Instance.new("Frame")
+    SliderBar.Size = UDim2.new(0.4, 0, 0.2, 0)
+    SliderBar.Position = UDim2.new(0.55, 0, 0.4, 0)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    SliderBar.Parent = SliderFrame
+    
+    local SliderButton = Instance.new("TextButton")
+    SliderButton.Size = UDim2.new(0, 20, 1, 0)
+    SliderButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    SliderButton.Text = ""
+    SliderButton.Parent = SliderBar
+    
+    local dragging = false
+    
+    SliderButton.MouseButton1Down:Connect(function()
+        dragging = true
+    end)
+    
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    SliderButton.MouseMoved:Connect(function(x)
+        if dragging then
+            local relativePosition = math.clamp((x - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+            SliderButton.Position = UDim2.new(relativePosition, -10, 0, 0)
+            local value = minValue + (maxValue - minValue) * relativePosition
+            callback(value)
+        end
+    end)
+end
+
+return CheatGUI
