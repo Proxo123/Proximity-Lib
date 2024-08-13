@@ -8,26 +8,71 @@ function CheatGUI.new(title)
     -- Create ScreenGui
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = "CheatGUI"
-    self.ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    self.ScreenGui.Parent = game:GetService("CoreGui") -- Parent to CoreGui
     
     -- Create main frame
     self.MainFrame = Instance.new("Frame")
     self.MainFrame.Name = "MainFrame"
-    self.MainFrame.Size = UDim2.new(0, 300, 0, 400)
-    self.MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    self.MainFrame.Size = UDim2.new(0, 600, 0, 400)
+    self.MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
     self.MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    self.MainFrame.BorderSizePixel = 0
     self.MainFrame.Parent = self.ScreenGui
     
-    -- Create title label
+    -- Create title bar
+    local TitleBar = Instance.new("Frame")
+    TitleBar.Name = "TitleBar"
+    TitleBar.Size = UDim2.new(1, 0, 0, 30)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TitleBar.BorderSizePixel = 0
+    TitleBar.Parent = self.MainFrame
+    
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "TitleLabel"
     TitleLabel.Text = title
-    TitleLabel.Size = UDim2.new(1, 0, 0, 50)
-    TitleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TitleLabel.Size = UDim2.new(1, -30, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.Font = Enum.Font.SourceSans
-    TitleLabel.TextSize = 24
-    TitleLabel.Parent = self.MainFrame
+    TitleLabel.Font = Enum.Font.SourceSansBold
+    TitleLabel.TextSize = 18
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Parent = TitleBar
+    
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "CloseButton"
+    CloseButton.Text = "X"
+    CloseButton.Size = UDim2.new(0, 30, 1, 0)
+    CloseButton.Position = UDim2.new(1, -30, 0, 0)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.Font = Enum.Font.SourceSansBold
+    CloseButton.TextSize = 18
+    CloseButton.Parent = TitleBar
+    CloseButton.MouseButton1Click:Connect(function()
+        self.ScreenGui:Destroy()
+    end)
+    
+    -- Create sidebar for tabs
+    self.Sidebar = Instance.new("Frame")
+    self.Sidebar.Name = "Sidebar"
+    self.Sidebar.Size = UDim2.new(0, 150, 1, -30)
+    self.Sidebar.Position = UDim2.new(0, 0, 0, 30)
+    self.Sidebar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    self.Sidebar.BorderSizePixel = 0
+    self.Sidebar.Parent = self.MainFrame
+    
+    -- Container for tab content
+    self.ContentFrame = Instance.new("Frame")
+    self.ContentFrame.Name = "ContentFrame"
+    self.ContentFrame.Size = UDim2.new(1, -150, 1, -30)
+    self.ContentFrame.Position = UDim2.new(0, 150, 0, 30)
+    self.ContentFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    self.ContentFrame.BorderSizePixel = 0
+    self.ContentFrame.Parent = self.MainFrame
+    
+    -- Store tabs and content
+    self.Tabs = {}
     
     return self
 end
@@ -42,59 +87,102 @@ function CheatGUI:AddTab(tabName)
     TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     TabButton.Font = Enum.Font.SourceSans
     TabButton.TextSize = 20
-    TabButton.Parent = self.MainFrame
+    TabButton.Parent = self.Sidebar
     
-    -- Functionality for the tab
+    local TabContent = Instance.new("Frame")
+    TabContent.Name = tabName .. "Content"
+    TabContent.Size = UDim2.new(1, 0, 1, 0)
+    TabContent.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TabContent.Visible = false
+    TabContent.Parent = self.ContentFrame
+    
+    self.Tabs[tabName] = {
+        Button = TabButton,
+        Content = TabContent
+    }
+    
+    -- Tab switching logic
     TabButton.MouseButton1Click:Connect(function()
-        -- Hide other tabs' content and show this tab's content
+        for _, tab in pairs(self.Tabs) do
+            tab.Content.Visible = false
+            tab.Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        end
+        TabContent.Visible = true
+        TabButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     end)
+    
+    -- Automatically select the first tab
+    if #self.Tabs == 1 then
+        TabButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        TabContent.Visible = true
+    end
 end
 
--- Function to create a button
+-- Function to add elements to a tab
+function CheatGUI:AddLabel(tabName, labelText)
+    local Label = Instance.new("TextLabel")
+    Label.Text = labelText
+    Label.Size = UDim2.new(1, -20, 0, 50)
+    Label.Position = UDim2.new(0, 10, 0, 10)
+    Label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.SourceSans
+    Label.TextSize = 18
+    Label.Parent = self.Tabs[tabName].Content
+end
+
 function CheatGUI:AddButton(tabName, buttonText, callback)
     local Button = Instance.new("TextButton")
     Button.Name = buttonText
     Button.Text = buttonText
-    Button.Size = UDim2.new(1, 0, 0, 50)
+    Button.Size = UDim2.new(1, -20, 0, 50)
+    Button.Position = UDim2.new(0, 10, 0, 70)
     Button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Button.Font = Enum.Font.SourceSans
     Button.TextSize = 18
-    
-    -- Add to the correct tab
-    Button.Parent = self.MainFrame:FindFirstChild(tabName)
-    
+    Button.Parent = self.Tabs[tabName].Content
     Button.MouseButton1Click:Connect(callback)
 end
 
--- Function to create a toggle
 function CheatGUI:AddToggle(tabName, toggleText, callback)
-    local Toggle = Instance.new("TextButton")
-    Toggle.Name = toggleText
-    Toggle.Text = toggleText .. ": OFF"
-    Toggle.Size = UDim2.new(1, 0, 0, 50)
-    Toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Toggle.Font = Enum.Font.SourceSans
-    Toggle.TextSize = 18
-    Toggle.Parent = self.MainFrame:FindFirstChild(tabName)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Size = UDim2.new(1, -20, 0, 50)
+    ToggleFrame.Position = UDim2.new(0, 10, 0, 130)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    ToggleFrame.Parent = self.Tabs[tabName].Content
+    
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Text = toggleText
+    ToggleLabel.Size = UDim2.new(0.8, 0, 1, 0)
+    ToggleLabel.Position = UDim2.new(0, 10, 0, 0)
+    ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleLabel.Font = Enum.Font.SourceSans
+    ToggleLabel.TextSize = 18
+    ToggleLabel.Parent = ToggleFrame
+    
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Text = ""
+    ToggleButton.Size = UDim2.new(0, 40, 0, 20)
+    ToggleButton.Position = UDim2.new(1, -50, 0.5, -10)
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    ToggleButton.Parent = ToggleFrame
     
     local state = false
     
-    Toggle.MouseButton1Click:Connect(function()
+    ToggleButton.MouseButton1Click:Connect(function()
         state = not state
-        Toggle.Text = toggleText .. ": " .. (state and "ON" or "OFF")
+        ToggleButton.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(80, 80, 80)
         callback(state)
     end)
 end
 
--- Function to create a slider
 function CheatGUI:AddSlider(tabName, sliderText, minValue, maxValue, callback)
     local SliderFrame = Instance.new("Frame")
-    SliderFrame.Name = sliderText
-    SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    SliderFrame.Size = UDim2.new(1, -20, 0, 50)
+    SliderFrame.Position = UDim2.new(0, 10, 0, 190)
     SliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    SliderFrame.Parent = self.MainFrame:FindFirstChild(tabName)
+    SliderFrame.Parent = self.Tabs[tabName].Content
     
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Text = sliderText
